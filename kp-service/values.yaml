@@ -1,0 +1,84 @@
+# Required — set in each service's values file
+name: ""
+team: ""
+environment: ""  # staging | production
+
+# Image — repository is required; tag is injected by the deploy workflow
+image:
+  repository: ""  # 805149719934.dkr.ecr.us-east-2.amazonaws.com/<repo-name>
+  tag: ""
+  pullPolicy: IfNotPresent
+
+# Service Account
+# Set create: true and add an IRSA annotation when the pod needs AWS access
+serviceAccount:
+  create: false
+  annotations: {}
+  # eks.amazonaws.com/role-arn: arn:aws:iam::805149719934:role/<role-name>
+
+# Override service account name (defaults to {name}-{environment})
+serviceAccountName: ""
+
+# Port the container listens on
+containerPort: 8000
+
+# Static replica count — ignored when autoscaling.enabled = true
+replicaCount: 2
+
+# Path used for liveness and readiness probes
+healthCheckEndpoint: /health/
+
+# Ingress — creates an AWS ALB via aws-load-balancer-controller
+ingress:
+  enabled: true
+  # internet-facing = public ALB; internal = VPN-only ALB
+  scheme: internet-facing
+  # ACM certificate ARN (required when ingress.enabled = true)
+  # staging  (*.kspt.dev):              arn:aws:acm:us-east-2:805149719934:certificate/6b227fd6-051d-4451-b2ff-f424185624ee
+  # production (*.kashport.com):        arn:aws:acm:us-east-2:805149719934:certificate/bd2a6451-3be5-4b7b-ac9a-7b0a97b85ac2
+  # internal (*.internal.kashport.com): arn:aws:acm:us-east-2:805149719934:certificate/4bd67cc8-5001-44d4-a0c5-8e8d873789ff
+  certArn: ""
+  host: ""  # e.g. api.kspt.dev or api.kashport.com
+  annotations: {}  # merged on top of ALB defaults
+  paths:
+    - path: /
+      pathType: Prefix
+
+# Environment variables injected into web and worker containers
+env: {}
+# DJANGO_SETTINGS_MODULE: config.settings.production
+# PORT: "8000"
+
+# Resource requests and limits
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+# Pod Disruption Budget — set to "" to disable
+maxUnavailable: "50%"
+
+# Celery worker — same image and env vars as the web container
+worker:
+  enabled: false
+  replicaCount: 1
+  # command: ["celery", "-A", "config", "worker", "--loglevel=info", "-Q", "default"]
+  command: []
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi

@@ -1,0 +1,35 @@
+name: Publish kp-service chart
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Login to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_ACTOR: ${{ github.actor }}
+        run: echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
+
+      - name: Get chart version
+        id: version
+        run: echo "version=$(grep '^version:' kp-service/Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Package chart
+        run: helm package kp-service --version ${{ steps.version.outputs.version }}
+
+      - name: Push to GHCR
+        run: helm push kp-service-${{ steps.version.outputs.version }}.tgz oci://ghcr.io/kashportsa/helm

@@ -1,0 +1,14 @@
+{{- if .Values.maxUnavailable }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "kp-service.fullname" . }}
+  labels:
+    {{- include "kp-service.labels" . | nindent 4 }}
+spec:
+  maxUnavailable: {{ .Values.maxUnavailable }}
+  selector:
+    matchLabels:
+      {{- include "kp-service.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: web
+{{- end }}
