@@ -44,7 +44,11 @@ ingress:
     - path: /
       pathType: Prefix
 
-# Environment variables injected into web and worker containers
+# Name of a Kubernetes Secret whose keys are injected as env vars (envFrom.secretRef)
+# Create the secret manually or via External Secrets Operator before deploying
+envFromSecret: ""
+
+# Additional inline env vars (merged on top of envFromSecret)
 env: {}
 # DJANGO_SETTINGS_MODULE: config.settings.production
 # PORT: "8000"
