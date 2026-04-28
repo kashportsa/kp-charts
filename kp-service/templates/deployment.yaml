@@ -19,6 +19,14 @@ spec:
         app.kubernetes.io/component: web
     spec:
       serviceAccountName: {{ include "kp-service.serviceAccountName" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: {{ .Values.name }}
           image: {{ include "kp-service.image" . }}

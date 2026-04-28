@@ -69,6 +69,12 @@ autoscaling:
 # Pod Disruption Budget — set to "" to disable
 maxUnavailable: "50%"
 
+# Node placement — route pods to the correct node group per environment
+# staging:    nodeSelector: {environment: staging}  + matching toleration
+# production: nodeSelector: {environment: production}
+nodeSelector: {}
+tolerations: []
+
 # Celery worker — same image and env vars as the web container
 worker:
   enabled: false
