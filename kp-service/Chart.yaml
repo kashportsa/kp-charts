@@ -2,5 +2,5 @@ apiVersion: v2
 name: kp-service
 description: Generic Helm chart for Kashport HTTP services (web + optional Celery worker)
 type: application
-version: 0.2.0
+version: 0.2.1
 appVersion: "1.0.0"

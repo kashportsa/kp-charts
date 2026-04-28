@@ -38,8 +38,10 @@ Service account name: explicit override or derived from {name}-{environment}
 {{- define "kp-service.serviceAccountName" -}}
 {{- if .Values.serviceAccountName -}}
 {{- .Values.serviceAccountName -}}
-{{- else -}}
+{{- else if .Values.serviceAccount.create -}}
 {{- printf "%s-%s" .Values.name .Values.environment | trimSuffix "-" -}}
+{{- else -}}
+default
 {{- end -}}
 {{- end }}
 
