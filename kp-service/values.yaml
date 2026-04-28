@@ -28,6 +28,17 @@ replicaCount: 2
 # Path used for liveness and readiness probes
 healthCheckEndpoint: /health/
 
+# Probe timing — increase initialDelaySeconds for apps that run migrations on startup
+probes:
+  liveness:
+    initialDelaySeconds: 15
+    periodSeconds: 20
+    failureThreshold: 3
+  readiness:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+
 # Ingress — creates an AWS ALB via aws-load-balancer-controller
 ingress:
   enabled: true
