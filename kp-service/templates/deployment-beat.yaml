@@ -1,0 +1,49 @@
+{{- if .Values.beat.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kp-service.fullname" . }}-beat
+  labels:
+    {{- include "kp-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.beat.replicaCount | default 1 }}
+  selector:
+    matchLabels:
+      {{- include "kp-service.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: beat
+  template:
+    metadata:
+      labels:
+        {{- include "kp-service.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: beat
+    spec:
+      serviceAccountName: {{ include "kp-service.serviceAccountName" . }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: beat
+          image: {{ include "kp-service.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            {{- toYaml .Values.beat.command | nindent 12 }}
+          {{- if .Values.envFromSecret }}
+          envFrom:
+            - secretRef:
+                name: {{ .Values.envFromSecret }}
+          {{- end }}
+          {{- with .Values.env }}
+          env:
+            {{- range $key, $value := . }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.beat.resources | nindent 12 }}
+{{- end }}

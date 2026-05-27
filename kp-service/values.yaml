@@ -103,3 +103,16 @@ worker:
     limits:
       cpu: 500m
       memory: 512Mi
+
+# Celery beat scheduler — always replicaCount: 1 (must not be scaled)
+beat:
+  enabled: false
+  replicaCount: 1
+  command: []
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
