@@ -75,6 +75,16 @@ adminIngress:
     - path: /
       pathType: Prefix
 
+# Additional ingresses routing to THIS service (same Service), e.g. serving the
+# backend under app.kashport.com/api on the frontend's shared ALB group. Each item:
+#   - name: webapi            # suffix for the Ingress object name
+#     scheme: internet-facing
+#     certArn: <acm-arn>
+#     host: app.kashport.com
+#     annotations: {alb.ingress.kubernetes.io/group.name: ..., group.order: "15"}
+#     paths: [{path: /api, pathType: Prefix}]
+extraIngresses: []
+
 # Name of a Kubernetes Secret whose keys are injected as env vars (envFrom.secretRef)
 # Create the secret manually or via External Secrets Operator before deploying
 envFromSecret: ""

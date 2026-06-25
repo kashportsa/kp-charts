@@ -68,3 +68,41 @@ spec:
                   number: {{ $.Values.containerPort }}
           {{- end }}
 {{- end }}
+{{- range .Values.extraIngresses }}
+---
+# Additional ingress(es) routing to the SAME Service. Use for serving this
+# service under another host/path on a shared ALB group (e.g. app.kashport.com/api
+# alongside a frontend at app.kashport.com/). Rule priority is set per-ingress via
+# the alb.ingress.kubernetes.io/group.order annotation (lower = matched first).
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "kp-service.fullname" $ }}-{{ .name }}
+  labels:
+    {{- include "kp-service.labels" $ | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: {{ .scheme | default "internet-facing" }}
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: {{ required "extraIngresses[].certArn is required" .certArn }}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443},{"HTTP":80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    {{- with .annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: alb
+  rules:
+    - host: {{ required "extraIngresses[].host is required" .host }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ include "kp-service.fullname" $ }}
+                port:
+                  number: {{ $.Values.containerPort }}
+          {{- end }}
+{{- end }}
