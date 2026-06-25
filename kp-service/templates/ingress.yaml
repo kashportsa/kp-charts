@@ -31,3 +31,40 @@ spec:
                   number: {{ $.Values.containerPort }}
           {{- end }}
 {{- end }}
+{{- if and .Values.adminIngress .Values.adminIngress.enabled }}
+---
+# Opt-in second ingress for a private/admin surface on a separate ALB.
+# Routes to the SAME Service; isolation comes from a distinct ALB group
+# (e.g. an internal-scheme group) plus host-based path rules in values.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "kp-service.fullname" . }}-admin
+  labels:
+    {{- include "kp-service.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: {{ .Values.adminIngress.scheme | default "internal" }}
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: {{ required "adminIngress.certArn is required when adminIngress.enabled = true" .Values.adminIngress.certArn }}
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS":443},{"HTTP":80}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    {{- with .Values.adminIngress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  ingressClassName: alb
+  rules:
+    - host: {{ required "adminIngress.host is required when adminIngress.enabled = true" .Values.adminIngress.host }}
+      http:
+        paths:
+          {{- range .Values.adminIngress.paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ include "kp-service.fullname" $ }}
+                port:
+                  number: {{ $.Values.containerPort }}
+          {{- end }}
+{{- end }}

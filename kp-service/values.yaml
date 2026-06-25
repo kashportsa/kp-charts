@@ -28,6 +28,12 @@ replicaCount: 2
 # Path used for liveness and readiness probes
 healthCheckEndpoint: /health/
 
+# Optional Host header for kubelet probes. Set this when the app tightens host
+# validation (e.g. Django ALLOWED_HOSTS): kubelet probes default to Host = pod IP,
+# which a tightened allowlist would reject (400) and the pod would never go Ready.
+# Empty = no header injected (backward compatible).
+healthCheckHost: ""
+
 # Probe timing — increase initialDelaySeconds for apps that run migrations on startup
 probes:
   liveness:
@@ -48,9 +54,23 @@ ingress:
   # staging  (*.kspt.dev):              arn:aws:acm:us-east-2:805149719934:certificate/6b227fd6-051d-4451-b2ff-f424185624ee
   # production (*.kashport.com):        arn:aws:acm:us-east-2:805149719934:certificate/bd2a6451-3be5-4b7b-ac9a-7b0a97b85ac2
   # internal (*.internal.kashport.com): arn:aws:acm:us-east-2:805149719934:certificate/4bd67cc8-5001-44d4-a0c5-8e8d873789ff
+  # internal (*.prod.kspt.co):          arn:aws:acm:us-east-2:805149719934:certificate/6b8b3663-30c1-44e7-9223-79c021d66c54
   certArn: ""
   host: ""  # e.g. api.kspt.dev or api.kashport.com
   annotations: {}  # merged on top of ALB defaults
+  paths:
+    - path: /
+      pathType: Prefix
+
+# Optional second ingress for a private/admin surface on a SEPARATE ALB.
+# Routes to the same Service; isolation = distinct ALB group (internal scheme)
+# + host-based path rules. Disabled by default (other services are unaffected).
+adminIngress:
+  enabled: false
+  scheme: internal
+  certArn: ""
+  host: ""  # e.g. admin.prod.kspt.co
+  annotations: {}  # set alb.ingress.kubernetes.io/group.name to join an internal ALB group
   paths:
     - path: /
       pathType: Prefix
